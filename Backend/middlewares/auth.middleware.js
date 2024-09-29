@@ -1,23 +1,20 @@
 import jwt from 'jsonwebtoken';
-import {User} from '../models/user.model.js'
+import {admin} from '../models/adminuser.model.js'
 
 
 
 export const verifyjwt = async(req , res, next)=>{
     try {
-        const token = req.header('Authorization').replace("Bearer" , " ")
+        const token = req.header('Authorization')?.replace("Bearer" , "").trim()
         if(!token){
            return res.status(404).json({message : "No token Found"})
         }
-        console.log(token)
-        const decodedtoken = jwt.verify(token , process.env.ACCESS_TOKEN_SECRET);
-        const user = await User.findById(decodedtoken?._id).select('-Password')
-        console.log(user)
-        console.log(decodedtoken)
+        const decodedtoken = jwt.verify(token , process.env.ACCESS_TOKEN);
+        const user = await admin.findById(decodedtoken?._id).select('-Password')
+        
         if(!user){
             return res.status(401).json({message:"Token Not Verified"})
         }
-        console.log(decodedtoken)
         req.user = user;
         next();
     } catch (error) {

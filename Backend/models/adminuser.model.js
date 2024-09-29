@@ -1,4 +1,6 @@
 import mongoose , {Schema} from "mongoose";
+import jwt from 'jsonwebtoken';
+
 
 const adminSchema = new mongoose.Schema({
     UserName  : {
@@ -48,7 +50,7 @@ adminSchema.methods.hashpassword = function(Password){
            Email : this.Email,
            UserName : this.UserName
         },
-        process.env.ACCESS_TOKEN_SECRET,
+        process.env.ACCESS_TOKEN,
         {
          expiresIn : process.env.ACCESS_TOKEN_EXPIRY
         }
@@ -59,7 +61,7 @@ adminSchema.methods.hashpassword = function(Password){
         {
           _id : this._id ,
         },
-        process.env.REFRESH_TOKEN_SECRET,
+        process.env.REFRESH_TOKEN,
         {
          expiresIn : process.env.REFRESH_TOKEN_EXPIRY
         }

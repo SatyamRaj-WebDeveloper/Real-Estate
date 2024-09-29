@@ -6,15 +6,18 @@ import bcrypt from 'bcrypt';
 
 const generateAccessandRefreshToken = async(userId)=>{
      try {
-       const user = await admin.findOne(userId)
+       const user = await admin.findById(userId)
        if(!user){
         console.log("generateAccessandRefreshToken :: admin user not found")
-       }
+       }else{
        const accessToken = user.generateAccessToken()
        const refreshToken = user.generaterefreshToken()
        user.refreshToken = refreshToken;
+       console.log('accessToken' , accessToken)
+       console.log('refreshToken' , refreshToken)
        await user.save({validateBeforeSave:false})
        return {accessToken , refreshToken}
+       }
      } catch (error) {
         console.log("AdminLogin :: Tokens not generated")
      }
@@ -51,18 +54,16 @@ const regitserAsAdmin = async(req,res)=>{
 
 const LoginAdmin = async(req,res)=>{
     const {Email , Password }= req.body
+    console.log(Email,Password)
     try {
         if(!Email || !Password){
             console.log("LoginAdmin :: All Fields are required")
         }
         const user = await admin.findOne({Email}) 
-        console.log(user)
-        const decryptedpassword = await bcrypt.compare(Password, user.Password) 
-        console.log(decryptedpassword)   
+        const decryptedpassword = await bcrypt.compare(Password, user.Password)  
         if(decryptedpassword){     
             const VerificationCode = Math.floor(100000 + Math.random()*900000).toString()
-            console.log(VerificationCode)
-            user.VerificationCode = VerificationCode;
+            user.VerificationCode = VerificationCode
             await user.save();
             sendMail(Email , VerificationCode)
             console.log("LoginAdmin :: Verification Code sent Successfully")
@@ -81,15 +82,18 @@ const verifyCode = async(req,res)=>{
      if(!Code){
          console.log("VerifyCode :: Please Enter a Valid Code")
      }
-     const user = await admin.findById(Email)
+     const user = await admin.findOne({Email})
      const vcode = user.VerificationCode
-     const {accessToken , refreshToken} = await generateAccessandRefreshToken(user._id)
-     if(vcode === Code){
-        localStorage.setItem('accessToken', accessToken)
-        localStorage.setItem('refreshToken', refreshToken)
+     if(Code === vcode){
+        const {accessToken , refreshToken}= await generateAccessandRefreshToken(user._id)
+        // localStorage.setItem('accessToken', accessToken)
+        // localStorage.setItem('refreshToken', refreshToken)
          user.VerificationCode = undefined;
          user.isVerified = true;
-         return res.status(201).json({message : "verifyCode :: Code Verification Successfull"})
+         await user.save()
+         return res.status(201).json({message : "verifyCode :: Code Verification Successfull" , data : {
+            accessToken , refreshToken
+         }})
      }else{
          return res.status(400).json({message:"verifyCode :: Code Was not verified/ Invalid Code"})
      }
@@ -99,12 +103,10 @@ const verifyCode = async(req,res)=>{
 }
 
 const LogoutAdmin = async(req,res)=>{
-     const userId = req.user._id;
+     const userId = req.user;
      try {
         const user = await admin.findByIdAndUpdate(
-           {
-               userId
-           },
+            userId,
            {
                $set:{refreshToken:undefined}
            },
@@ -112,19 +114,19 @@ const LogoutAdmin = async(req,res)=>{
                new : true,
            }
         )
-        localStorage.clear('accessToken')
-        localStorage.clear('refreshToken')
+        console.log(user)
+        // localStorage.clear('accessToken')
+        // localStorage.clear('refreshToken')
         return res.status(201).json({message:"LogoutAdmin :: Admin LoggedOut Successfully"})
      } catch (error) {
-        return res.status(400).json({message:"LogoutAdmin :: Not LoggedOut "})
+        return res.status(400).json({message:"LogoutAdmin :: Not LoggedOut ",error})
      }
 }
 
 const createPost = async(req,res)=>{
-    const userId = req.user._id;
+    const userId = req.user;
     const Image = req.file?.path
     const {status ,Address,coordinates}=req.body;
-
     try {
         if(!Image || !status || !Address || !coordinates){
             console.log("createPost :: All Fields are Required")
@@ -138,21 +140,21 @@ const createPost = async(req,res)=>{
             type : 'Point',
             coordinates,
            },
-           owner : userId,
+           owner :userId.UserName
         })
         await Post.save()
         if(!Post){
             console.log("CreatePost :: Post Could not be Created")
         }
-        return res.status(201).json({message : "CreatePost :: Post Created Successfully"})
+        return res.status(201).json({message : "CreatePost :: Post Created Successfully" , data :{Post}})
     } catch (error) {
         return res.status(400).json({message:"AdminPost :: Post Was not created "})
     }
 }
 
 const deletePost = async(req,res)=>{
-    const userId = req.user._id;
     const postId = req.params.postId;
+    console.log(postId)
     try {
         if(!postId){
            return res.status(404).json({message:"DeletePost :: No Post Found to delete"})
@@ -160,34 +162,35 @@ const deletePost = async(req,res)=>{
         const DeletedPost = await post.findOneAndDelete(
             {
                 _id :postId,
-                owner : userId,
             },
         )
         if(!DeletedPost){
             return res.status(400).json({message :"DeletePost :: Post not found or unauthorized"})
         }
-        return res.status(200).json({message:"DeletePost :: Post Deleted Successfully"},DeletedPost);
+        return res.status(200).json({message:"DeletePost :: Post Deleted Successfully",DeletedPost});
     } catch (error) {
-        return res.status(400).json({message:"DeletePost :: Post Could not be deleted"})
+        return res.status(400).json({message:"DeletePost :: Post Could not be deleted" ,error})
     }
 }
 
 
 const deleteAllPost = async(req,res)=>{
-    const userId = req.user._id;
+    const userId = req.user;
+    console.log(userId)
     try {
         if(!userId){
             console.log("Admin :: User NOt found")
         }
         const deletedPosts = await post.findOneAndDelete(
             {
-                owner : userId,
+                owner : userId.UserName,
             }
         )
+        console.log(deletedPosts)
         if(!deletedPosts){
             return res.status(400).json({message:"Admin :: All Posts Colud not be deleted"})
         }else{
-            return res.status(200).json({message:"Admin :: All Post Deleted Successfully"},deletedPosts)
+            return res.status(200).json({message:"Admin :: All Post Deleted Successfully",deletedPosts})
         }
     } catch (error) {
         return res.status(400).json({message:"Admin :: Posts Could not be Deleted"})
@@ -198,14 +201,14 @@ const deleteAllPost = async(req,res)=>{
 const updatePost = async(req,res)=>{
     const Image = req.file?.path
     const postId = req.params.postId
-    const userId = req.user_id
+    const userId = req.user._id
     const {status } = req.body;
     try {
       if(!postId || !userId){
         return res.status(400).json({message:"Admin :: Invalid PostId or User Not found"})
       }
       const image_url = await uploadOnCloudinary(Image)
-      const UpdatedPost = await new post.findByIdAndUpdate(
+      const UpdatedPost = await post.findByIdAndUpdate(
         {
             _id:postId
         },
@@ -217,9 +220,10 @@ const updatePost = async(req,res)=>{
             new : true
         }
       )
-      return res.status(201).json({message:"Admin :: Post Updated Successfully"},UpdatedPost)
+      return res.status(201).json({message:"Admin :: Post Updated Successfully",UpdatedPost})
     } catch (error) {
-        return res.status(400).json({message:"Admin :: Post Could not be Updated"})
+        console.log(error.message)
+        return res.status(400).json({message:"Admin :: Post Could not be Updated" , error})
     }
 }
 
