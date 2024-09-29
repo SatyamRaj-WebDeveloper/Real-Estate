@@ -16,6 +16,10 @@ const postSchema =  new Schema({
         enum : ["For Sale" , "Rent"],
         unique:true,
     },
+    Price :{
+        type:String,
+        required:true,
+    },
     location: {
         type: {
           type: String,

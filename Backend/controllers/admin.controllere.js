@@ -126,7 +126,7 @@ const LogoutAdmin = async(req,res)=>{
 const createPost = async(req,res)=>{
     const userId = req.user;
     const Image = req.file?.path
-    const {status ,Address,coordinates}=req.body;
+    const {status ,Address,coordinates,Price}=req.body;
     try {
         if(!Image || !status || !Address || !coordinates){
             console.log("createPost :: All Fields are Required")
@@ -140,6 +140,7 @@ const createPost = async(req,res)=>{
             type : 'Point',
             coordinates,
            },
+           Price,
            owner :userId.UserName
         })
         await Post.save()
