@@ -176,7 +176,6 @@ const deletePost = async(req,res)=>{
 
 const deleteAllPost = async(req,res)=>{
     const userId = req.user;
-    console.log(userId)
     try {
         if(!userId){
             console.log("Admin :: User NOt found")
@@ -186,7 +185,6 @@ const deleteAllPost = async(req,res)=>{
                 owner : userId.UserName,
             }
         )
-        console.log(deletedPosts)
         if(!deletedPosts){
             return res.status(400).json({message:"Admin :: All Posts Colud not be deleted"})
         }else{
