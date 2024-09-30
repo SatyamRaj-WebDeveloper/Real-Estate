@@ -1,6 +1,6 @@
 import mongoose , {Schema} from 'mongoose'
 import jwt from 'jsonwebtoken'
-
+import {post} from '../models/post.model.js'
 
 const UserSchema = new mongoose.Schema({
     UserName : {
@@ -25,7 +25,14 @@ const UserSchema = new mongoose.Schema({
     Image :{
         type : String,
         unique : true,
-    }
+    },
+    Bookings :{
+        type : String
+    },
+    WishList:[{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"post",
+    }]
 },{timestamps : true})
 
 

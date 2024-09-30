@@ -1,6 +1,9 @@
 import {User} from '../models/user.model.js'
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
 import bcrypt from 'bcrypt';
+import {post} from '../models/post.model.js'
+import {admin} from '../models/adminuser.model.js'
+import { sendMail } from '../middlewares/emailOTP.js';
 
 const generateAccessandRefreshToken = async(userId)=>{
     try {
@@ -68,6 +71,7 @@ try {
             // localStorage.setItem('accessToken' , accessToken)
             // localStorage.setItem('refreshToken' , refreshToken)
             user.refreshToken = refreshToken
+            console.log("Users accessToken",accessToken)
             return res.status(201).json({message:"User Logged In Successfully" , data:{user}})
         }else{
             return res.status(400).json({message:"Login :: Invalid Password"})
@@ -97,11 +101,128 @@ const logout = async(req,res)=>{
 }
 
 
+const Book = async(req,res)=>{
+    const plotId = req.params.plotId
+    const userId = req.user;
+    // console.log("PLot id",plotId)
+    try {
+      if(!plotId){
+        console.log("User Controller :: Invalid Plot Id")
+      }
+      const Plot = await post.findByIdAndUpdate(
+        {
+            _id:plotId
+        },
+        {
+            $set:{isBooked:true}
+        },
+        {
+            new : true
+        }
+      );
+      const Admin = await admin.findOne(
+        {
+            UserName : Plot.owner
+        }
+      )
+      const adminEmail = Admin.Email;
+      const Text = "SomeOne Just booked your Plot"
+      sendMail(adminEmail , Text)
+      if(!Plot){
+        console.log("User Controller :: No Plot Found")
+      }
+      const user = await User.findById(userId)
+      user.Bookings = Plot+
+      await user.save()
+      return res.status(201).json({message:"Booking :: Plot Booked Successfully",data:{user}})
+    } catch (error) {
+        console.log(error)
+        return res.status(400).json({message:"User Controller :: Booking Function not worked",error})
+    }
+}
 
 
+const AddtoWishlist = async(req,res)=>{
+    const postId = req.params.postId;
+    const userId = req.user;
+    try {
+        if(!postId){
+            console.log("Invalid Post Id")
+        }
+        const Post = await post.findById(postId)
+        if(!Post){
+            console.log("No Post found")
+        } 
+        const user = await User.findById(userId );
+        if(!user){
+            console.log("No User Found")
+        }else{
+            user.WishList.push(Post)
+        }
+        await user.save();
+        return res.status(201).json({message:"Added To Wishlist Successfully" , data:{user}})
+    } catch (error) {
+        return res.status(400).json({message:"Could Not Add To wishlist" ,error})
+    }
+}
+
+const deleteItemfromWishlist = async(req,res)=>{
+    const postId = req.params.postId;
+    const userId = req.user;
+    try {
+        const user = await User.findById(userId);
+        if(!user){
+            console.log("No User Found")
+        }else{
+            console.log("user :: ",user)
+          user.WishList =  user.WishList.filter((id)=>id.toString()!==postId.toString())
+            console.log("user wishlist :: ",user.WishList)
+        }
+        await user.save()
+        return res.status(201).json({message:"Post Deleted from wishlist Successfully" , data:{user}})
+    } catch (error) {
+        return res.status(400).json({message:"User Controller :: Could not delete from wishlist"})
+    }
+
+}
+
+const usersWishlist = async(req,res)=>{
+    const userId=req.user._id;
+    console.log(userId)
+   try {
+     if(!userId){
+     return res.status(400).json({message:"Invalid User Details"})
+     }
+     const user = await User.findById(userId)
+     if(!user){
+         console.log("No User Found")
+     }
+     const list = user.WishList
+     if(!list){
+         return res.status(404).json({message:"NO List Found"})
+     }else if(list.length<=0){
+         return res.status(400).json({message:"No Items In Wishlist"})
+     }
+     const posts = await post.find({
+        _id:{$in:list}
+     })
+     if(posts.length === 0){
+        return res.status(400).json({message:"NO Post Found in the Wishlist"})
+     }else{
+        return res.status(201).json({message:"Wishlist Fetched Successfully",posts})
+     }
+    
+   } catch (error) {
+      return res.status(400).json({message:"fetch List function did not work" , error})
+   }
+}
 
 export {
+    Book,
     loginUser,
     registerUser,
     logout ,
+    AddtoWishlist,
+    deleteItemfromWishlist,
+    usersWishlist
 }

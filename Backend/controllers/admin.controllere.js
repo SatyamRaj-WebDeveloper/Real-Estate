@@ -127,6 +127,7 @@ const createPost = async(req,res)=>{
     const userId = req.user;
     const Image = req.file?.path
     const {status ,Address,coordinates,Price}=req.body;
+   
     try {
         if(!Image || !status || !Address || !coordinates){
             console.log("createPost :: All Fields are Required")
@@ -149,7 +150,8 @@ const createPost = async(req,res)=>{
         }
         return res.status(201).json({message : "CreatePost :: Post Created Successfully" , data :{Post}})
     } catch (error) {
-        return res.status(400).json({message:"AdminPost :: Post Was not created "})
+        console.log(error)
+        return res.status(400).json({message:"AdminPost :: Post Was not created ",error})
     }
 }
 

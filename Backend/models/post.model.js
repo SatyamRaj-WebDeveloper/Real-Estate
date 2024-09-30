@@ -14,7 +14,6 @@ const postSchema =  new Schema({
         type : String,
         required: true,
         enum : ["For Sale" , "Rent"],
-        unique:true,
     },
     Price :{
         type:String,
@@ -33,8 +32,10 @@ const postSchema =  new Schema({
     },
     owner:{
         type:String,
-        required:true,
-        unique:true
+    },
+    isBooked :{
+        type : Boolean,
+        default : false
     }
 },{timestamps:true})
 
