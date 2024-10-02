@@ -5,7 +5,8 @@ import {
     Book,
     AddtoWishlist,
     deleteItemfromWishlist,
-    usersWishlist
+    usersWishlist,
+    ContactOwner
 } from '../controllers/user.controller.js';
 import {verifyjwtuser} from '../middlewares/auth.middleware.js'
 import Router from 'express'
@@ -20,4 +21,5 @@ router.route('/logout').post(logout)
 router.route('/AddingtoWishlist/:postId').post(verifyjwtuser , AddtoWishlist)
 router.route('/removefromwshlist/:postId').post(verifyjwtuser ,deleteItemfromWishlist )
 router.route("/Wishlist").get(verifyjwtuser , usersWishlist)
+router.route('/Contact/:propertyId').post(verifyjwtuser , ContactOwner)
 export default router
