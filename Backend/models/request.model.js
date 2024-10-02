@@ -7,7 +7,6 @@ const requestSchema = new Schema({
     type : mongoose.Schema.Types.ObjectId,
     ref:'User',
     required:true,
-    unique:true
   },
   messagefromUser:{
     type : String,
@@ -22,7 +21,7 @@ const requestSchema = new Schema({
   },
   status:{
     type:String,
-    enum:['Pending','Accepted','Rejected'],
+    enum:['Pending','Approved','Rejected'],
     default:'Pending'
   },
   usersPhone:{
@@ -36,7 +35,7 @@ const requestSchema = new Schema({
   },
   requestDate:{
     type:Date,
-    default:Date.now
+    default:Date.now().toString()
   }
 
 },{timestamps:true})

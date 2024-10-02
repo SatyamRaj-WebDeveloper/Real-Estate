@@ -36,6 +36,10 @@ const postSchema =  new Schema({
     isBooked :{
         type : Boolean,
         default : false
+    },
+    sold:{
+        type:Boolean,
+        default:false,
     }
 },{timestamps:true})
 

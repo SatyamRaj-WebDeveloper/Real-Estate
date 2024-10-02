@@ -5,6 +5,7 @@ import {post} from '../models/post.model.js'
 import {admin} from '../models/adminuser.model.js'
 import { sendMail } from '../middlewares/emailOTP.js';
 import { request } from '../models/request.model.js';
+import { generatehtmltemplate } from '../utils/template.js';
 
 const generateAccessandRefreshToken = async(userId)=>{
     try {
@@ -234,27 +235,15 @@ const ContactOwner=async(req,res)=>{
         usersPhone : Phone,
        })
        await Request.save();
-       const requestId = Request._id;
+       const user = await User.findById(userId)
        const property = await post.findById(propertyId);
-       const admin = property.owner
-       const admindata = await User.findOne(
-        {UserName : admin}
-       )
-       adminEmail = admindata.Email
-       const html = `    <p>Click the button below to verify the user's request:</p>
-    <a href="http://localhost:8000/${requestId}" style="
-      background-color: #28a745;
-      color: white;
-      padding: 10px 20px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 16px;
-      border-radius: 5px;
-    ">
-      Verify Request
-    </a>
-`
+       const Admin = property.owner
+       const admindata = await admin.findOne(
+        {UserName : Admin})
+        console.log(admindata)
+       const adminEmail = admindata.Email 
+       console.log(adminEmail)
+       const html = generatehtmltemplate(Request._id , user.UserName)
        sendMail(adminEmail , html)
        if(!Request){
         return res.status(400).json({message:"Request Function :: Could Not send request"})

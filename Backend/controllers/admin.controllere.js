@@ -3,6 +3,7 @@ import {uploadOnCloudinary} from '../utils/cloudinary.js'
 import { sendMail } from '../middlewares/emailOTP.js';
 import { post } from '../models/post.model.js';
 import bcrypt from 'bcrypt';
+import { request } from '../models/request.model.js';
 
 const generateAccessandRefreshToken = async(userId)=>{
      try {
@@ -228,6 +229,43 @@ const updatePost = async(req,res)=>{
     }
 }
 
+const approverequest = async(req,res)=>{
+    const requestId = req.params.requestId;
+   try {
+     if(!requestId){
+         return res.status(404).json({message:"Approverequest :: Invalid requestId"})
+     }
+     const Request = await request.findById(requestId)
+     if(!Request){
+         return res.status(404).json({message:'ApproveRequest :: No request Found'})
+     }
+     Request.status = "Approved"
+     await Request.save();
+     return res.status(200).json({message:"Approve Request :: Request Approved Successfully",data:{Request}})
+   } catch (error) {
+      return res.status(400).json({message:"Approve Request :: approverequest function failed !"})
+   }
+}
+
+const rejectRequest = async(req,res)=>{
+    const requestId = req.params.requestId;
+   try {
+     if(!requestId){
+         return res.status(404).json({message:"Reject Request :: Invalid requestId"})
+     }
+     const Request = await request.findById(requestId)
+     if(!Request){
+         return res.status(404).json({message:'Reject Request :: No request Found'})
+     }
+     Request.status = "Rejected";
+     await Request.save();
+     return res.status(200).json({message:"Reject Request :: Request Rejected Successfully" , data:{Request}})
+   } catch (error) {
+      return res.status(400).json({message:"Reject Request :: rejectRequest function failed !"})
+   }
+}
+
+
 
 
 
@@ -239,5 +277,7 @@ export {
     createPost,
     deletePost,
     deleteAllPost,
-    updatePost
+    updatePost,
+    approverequest,
+    rejectRequest,
 }
