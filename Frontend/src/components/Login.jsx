@@ -2,8 +2,10 @@ import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { FaGoogle } from "react-icons/fa";
 import axios from 'axios';
+import{ toast }from 'react-toastify';
 
 const Login = () => {
+
     const handleLogin = (e)=>{
           e.preventDefault();
           const formData = {
@@ -13,8 +15,13 @@ const Login = () => {
           }
           try {
             axios.post('http://localhost:8000/api/v1/users/login', formData)
-            .then(response => console.log(response))
-            .catch(error =>console.log(error))
+            .then(response => {
+              toast.success("User Logged In Successfully")
+            })
+            .catch((error)=>{
+              if(error.response.data.message === 'No user Found')
+                toast.error("Invalid User");
+            })
           } catch (error) {
             console.log(error.message)
           }
@@ -23,8 +30,11 @@ const Login = () => {
   return (
     <>
     <div className='w-full h-screen overflow-auto bg-gray-100'>
-    <div className='w-full h-18 bg-red-600 px-10 py-6'>
+    <div className='w-full h-18 bg-red-600 px-10 py-6 flex justify-between items-center'>
         <h1 className='text-xl font-poppins font-bold text-white '>HARBORHOMES</h1>
+        <div className='hover:border-b border-white px-3 '>
+            <NavLink className='text-xl text-white font-roboto font-medium ' to='/' >Home</NavLink>
+        </div>
     </div>
     <div className='w-full h-full flex justify-center items-center '>
     <div className='flex flex-col justify-center items-center border border-gray-400 w-fit  h-[600px]  px-8 rounded-xl bg-white'>
@@ -32,15 +42,15 @@ const Login = () => {
         <form onSubmit={handleLogin}  className='flex flex-col justify-center items-center gap-8 ' >
             <div className='flex justify-center items-center gap-4 w-fit h-fit '>
             <label htmlFor="UserName" className='text-lg font-poppins font-medium '>UserName :</label>
-            <input type="text" name='UserName' placeholder='Write Your UserName'  className='outline-none px-3 py-2  border-b border-gray-400'/>
+            <input type="text" name='UserName' placeholder=' UserName'  className='outline-none px-3 py-2  border-b border-gray-400'/>
             </div>
             <div className='flex justify-center items-center gap-4 w-fit h-fit '>
             <label htmlFor="UserName" className='text-lg font-poppins font-medium '>Email :</label>
-            <input type="text" name='Email' placeholder='Write Your Email' className='outline-none px-3 py-2  border-b border-gray-400'/>
+            <input type="text" name='Email' placeholder=' Email' className='outline-none px-3 py-2  border-b border-gray-400'/>
             </div>
             <div className='flex justify-center items-center gap-4 w-fit h-fit '>
             <label htmlFor="UserName" className='text-lg font-poppins font-medium '>Password :</label>
-            <input type="password" name='Password' placeholder='Enter Your Password' className='outline-none px-3 py-2  border-b border-gray-400'/>
+            <input type="password" name='Password' placeholder=' Password' className='outline-none px-3 py-2  border-b border-gray-400'/>
             </div>   
             <button type='Submit' className='w-full h-fit px-3 py-2 bg-red-600 text-white font-poppins text-xl font-medium'>Submit</button>
              <div className='border border-gray-300 w-full relative'>

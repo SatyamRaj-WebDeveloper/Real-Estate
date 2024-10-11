@@ -15,7 +15,7 @@ const NavBar = () => {
         <h1 className='text-2xl  font-bold font-poppins '>HarborHomes</h1>
         <div className='sm:flex hidden justify-between items-center w-fit gap-6 f-fit '>
             <div className='w-fit h-fit py-2 px-2  hover:border-b-2 hover:transition-all hover:border-white'>
-            <NavLink to='/home' className='text-lg font-medium font-roboto '>Home</NavLink>
+            <NavLink to='/' className='text-lg font-medium font-roboto '>Home</NavLink>
             </div>
             <div className='w-fit h-fit py-2 px-2  hover:border-b-2 hover:transition-all hover:border-white'>
             <NavLink to='/SignUp'  className='text-lg font-medium font-roboto '>SignUp</NavLink>
