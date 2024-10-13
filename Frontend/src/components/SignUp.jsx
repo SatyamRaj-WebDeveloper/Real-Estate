@@ -7,18 +7,24 @@ import { FaGoogle } from "react-icons/fa";
 
 const SignUp = () => {
     const [Image,setImage]=useState(null);
+    const[user,setuser]=useState('')
      
     const handleSubmit = (e)=>{
          e.preventDefault();
          console.log(e)
          const formData = new FormData();
          formData.append('Image' , Image)
-         formData.append('UserName' ,e.target[1].value );
-         formData.append('Email' , e.target[2].value);
-         formData.append('Password',e.target[3].value);
-         console.log(Image)
+         formData.append('UserName' ,e.target[3].value );
+         formData.append('Email' , e.target[4].value);
+         formData.append('Password',e.target[5].value);
+         console.log(user)
+         let apiurl;
+         if(user ==='Buyer')
+           apiurl = 'http://localhost:8000/api/v1/users/registerUser' ;
+        if(user === 'seller')
+          apiurl = 'http://localhost:8000/api/v1/admin/registerasAdmin'; 
          try {
-            axios.post('http://localhost:8000/api/v1/users/registerUser' ,formData)
+            axios.post(apiurl,formData)
             .then((response)=>{
                 toast.success('User Registered Successfully')
                 console.log(response)})
@@ -41,9 +47,16 @@ const SignUp = () => {
         </div>
     </div>
     <div className='w-full h-fit flex flex-col justify-center items-center'>
-       
+
+       {/*form*/}
         <form onSubmit={handleSubmit} encType='multipart/form-data'  className='flex flex-col justify-center items-center gap-6 w-fit h-fit  px-8 py-6 border-gray-200 border rounded-lg bg-white my-10'>
         <h1 className='text-3xl text-red-600 font-bold font-poppins'>SignUp</h1> 
+        {/* buyer and seller selection */}
+        <div className='w-full h-fit px-3 py-2 flex justify-around items-center '>
+      <button className='text-gray-500 px-3 py-2 rounded-full border border-gray-400 hover:bg-slate-400 hover:text-gray-600 transition-all focus:bg-slate-400 focus:text-gray-600' onClick={()=>setuser('Buyer')} type='button'>Buyer</button>
+      <button className='text-gray-500 px-3 py-2 rounded-full border border-gray-400 hover:bg-slate-400 hover:text-gray-600 transition-all focus:bg-slate-400 focus:text-gray-600'onClick={()=>setuser('seller')} type='button'>Seller</button>
+        </div>
+            
             <div className='relative'>
                 <div className='w-[150px] h-[150px] rounded-full overflow-hidden flex justify-center items-center cursor-pointer border-2 border-[#dddd] '>
                     {
@@ -80,7 +93,9 @@ const SignUp = () => {
             <label htmlFor="UserName" className='text-lg font-poppins font-medium '>Password :</label>
             <input type="password" name='Password' placeholder=' Password' className='outline-none px-3 py-2  border-b border-gray-400'/>
             </div>   
+
             <button type='Submit' className='w-full h-fit px-3 py-2 bg-red-600 text-white font-poppins text-xl font-medium'>Register</button>
+
             <div className='border border-gray-300 w-full relative'>
                 <div className='w-fit h-fit px-2 py-2 absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-white'>OR</div>
              </div>

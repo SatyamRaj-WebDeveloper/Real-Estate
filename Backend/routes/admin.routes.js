@@ -9,15 +9,17 @@ import {
     deleteAllPost,
     updatePost,
     approverequest,
-    rejectRequest
+    rejectRequest,
+    getCurrentUser
 } from '../controllers/admin.controllere.js';
 import {upload} from '../middlewares/multer.middleware.js';
 import {verifyjwt} from '../middlewares/auth.middleware.js';
 
 const router = Router()
 
-router.route('/registerasAdmin').post(upload.single('avatar'),regitserAsAdmin);
+router.route('/registerasAdmin').post(upload.single('Image'),regitserAsAdmin);
 router.route('/AdminLogin').post(LoginAdmin);
+router.route('/AdminUser').get(verifyjwt , getCurrentUser)
 router.route('/AdminLogin/verifyCode').post(verifyCode)
 router.route('/AdminLogout').post(verifyjwt ,LogoutAdmin);
 router.route('/createPost').post(verifyjwt,upload.single('Image') , createPost);

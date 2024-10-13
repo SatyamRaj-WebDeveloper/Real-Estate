@@ -29,6 +29,7 @@ const generateAccessandRefreshToken = async(userId)=>{
 const registerUser = async(req,res)=>{
     const {UserName , Email , Password} = req.body;
     const Image = req.file?.path
+    console.log(UserName , Email , Password,Image)
     try {
         if(!UserName || !Email || !Password){
             console.log("registerUser :: All Fields are required ")
@@ -51,6 +52,21 @@ const registerUser = async(req,res)=>{
     }
 }
 
+const getCurrentUser = async(req,res)=>{
+    const userId = req.user;
+    if(!userId){
+        return res.status(404).json({message:'Invalid User Id'})
+    }
+    try {
+         const user = await User.findById({_id:userId})
+         if(!user){
+           return res.status(404).json({message:"No user Found"})
+         }
+         return res.status(200).json({message:"User Fetched Successfully" , data:user})
+    } catch (error) {
+        return res.status(400).json({message:'User Controller :: get Current User function did not work'})
+    }
+}
 
 
 const loginUser = async(req,res)=>{
@@ -79,6 +95,7 @@ try {
             return res.status(400).json({message:"Login :: Invalid Password"})
         }
 } catch (error) {
+    console.log(error.message)
     return res.status(400).json({message : "LogIn Function Did not work in backend" , error})
 } 
 }
@@ -263,5 +280,6 @@ export {
     AddtoWishlist,
     deleteItemfromWishlist,
     usersWishlist,
-    ContactOwner
+    ContactOwner,
+    getCurrentUser,
 }
