@@ -14,8 +14,6 @@ const generateAccessandRefreshToken = async(userId)=>{
        const accessToken = user.generateAccessToken()
        const refreshToken = user.generaterefreshToken()
        user.refreshToken = refreshToken;
-       console.log('accessToken' , accessToken)
-       console.log('refreshToken' , refreshToken)
        await user.save({validateBeforeSave:false})
        return {accessToken , refreshToken}
        }
@@ -28,7 +26,8 @@ const generateAccessandRefreshToken = async(userId)=>{
 
 const regitserAsAdmin = async(req,res)=>{
     const {UserName , Email , Password}=req.body;
-    const avatar = req.file?.path;
+    const Image = req.file?.path;
+    console.log(UserName,Email,Password,Image)
     try {
         // console.log(UserName , Email , Password)
         if(!UserName || !Email || !Password){
@@ -36,7 +35,7 @@ const regitserAsAdmin = async(req,res)=>{
         }
         const existingadmin = await admin.findOne({Email})
         existingadmin ? console.log("registerAdmin :: User Already exist") : null
-        const avatar_url = await uploadOnCloudinary(avatar);
+        const avatar_url = await uploadOnCloudinary(Image);
         const hashedpassword = await bcrypt.hash(Password ,10 )
 
         const newAdmin = new admin({
@@ -61,6 +60,9 @@ const LoginAdmin = async(req,res)=>{
             console.log("LoginAdmin :: All Fields are required")
         }
         const user = await admin.findOne({Email}) 
+        if(!user){
+            return res.status(404).json({message:"Invalid Email"})
+        }
         const decryptedpassword = await bcrypt.compare(Password, user.Password)  
         if(decryptedpassword){     
             const VerificationCode = Math.floor(100000 + Math.random()*900000).toString()
@@ -75,6 +77,21 @@ const LoginAdmin = async(req,res)=>{
     }
 }
 
+const getCurrentUser = async(req,res)=>{
+    const userId = req.user._id;
+    if(!userId){
+        return res.status(404).json({message:'Invalid User Id'})
+    }
+    try {
+         const user = await admin.findById(userId)
+         if(!user){
+           return res.status(404).json({message:"No user Found"})
+         }
+         return res.status(200).json({message:"User Fetched Successfully" , data:user})
+    } catch (error) {
+        return res.status(400).json({message:'User Controller :: get Current User function did not work'})
+    }
+}
 
 const verifyCode = async(req,res)=>{
     const {Email}=req.body;
@@ -84,11 +101,9 @@ const verifyCode = async(req,res)=>{
          console.log("VerifyCode :: Please Enter a Valid Code")
      }
      const user = await admin.findOne({Email})
-     const vcode = user.VerificationCode
+     const vcode = user.VerificationCode;
      if(Code === vcode){
         const {accessToken , refreshToken}= await generateAccessandRefreshToken(user._id)
-        // localStorage.setItem('accessToken', accessToken)
-        // localStorage.setItem('refreshToken', refreshToken)
          user.VerificationCode = undefined;
          user.isVerified = true;
          await user.save()
@@ -130,7 +145,7 @@ const createPost = async(req,res)=>{
     const {status ,Address,coordinates,Price}=req.body;
    
     try {
-        if(!Image || !status || !Address || !coordinates){
+        if(!Image || !status || !Address ){
             console.log("createPost :: All Fields are Required")
         }
         const image_url = await uploadOnCloudinary(Image);
@@ -199,6 +214,28 @@ const deleteAllPost = async(req,res)=>{
     }
 }
 
+const getPosts =async(req,res)=>{
+    const userId= req.user._id;
+    console.log(userId)
+    try {
+        const user = await admin.findById({_id : userId})
+        if(!user){
+            return res.status(404).json({message:"No User Found"})
+        }
+        const posts = await post.find(
+            {
+                owner: user.UserName
+            }
+        )
+        if(!posts){
+            return res.status(404).json({message:"No Post created Yet"})
+        }else{
+            return res.status(200).json({message:"Posts Fetched Successfully",posts})
+        }
+    } catch (error) {
+        return res.status(400).json({message:"Get Posts Function did not work"})
+    }
+}
 
 const updatePost = async(req,res)=>{
     const Image = req.file?.path
@@ -280,4 +317,6 @@ export {
     updatePost,
     approverequest,
     rejectRequest,
+    getCurrentUser,
+    getPosts
 }
