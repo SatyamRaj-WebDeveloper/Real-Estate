@@ -140,7 +140,7 @@ const LogoutAdmin = async(req,res)=>{
 }
 
 const createPost = async(req,res)=>{
-    const userId = req.user;
+    const userId = req.user._id;
     const Image = req.file?.path
     const {status ,Address,coordinates,Price}=req.body;
    
@@ -158,7 +158,7 @@ const createPost = async(req,res)=>{
             coordinates,
            },
            Price,
-           owner :userId.UserName
+           owner :req.user.UserName
         })
         await Post.save()
         if(!Post){
@@ -173,7 +173,6 @@ const createPost = async(req,res)=>{
 
 const deletePost = async(req,res)=>{
     const postId = req.params.postId;
-    console.log(postId)
     try {
         if(!postId){
            return res.status(404).json({message:"DeletePost :: No Post Found to delete"})
@@ -216,7 +215,6 @@ const deleteAllPost = async(req,res)=>{
 
 const getPosts =async(req,res)=>{
     const userId= req.user._id;
-    console.log(userId)
     try {
         const user = await admin.findById({_id : userId})
         if(!user){
@@ -241,7 +239,9 @@ const updatePost = async(req,res)=>{
     const Image = req.file?.path
     const postId = req.params.postId
     const userId = req.user._id
-    const {status } = req.body;
+    const {status,price } = req.body;
+    
+    console.log(Image,price,status)
     try {
       if(!postId || !userId){
         return res.status(400).json({message:"Admin :: Invalid PostId or User Not found"})
@@ -254,6 +254,7 @@ const updatePost = async(req,res)=>{
         {
             Image : image_url.url,
             propertyStatus:status,
+            Price : price
         },
         {
             new : true
